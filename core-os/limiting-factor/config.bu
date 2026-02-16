@@ -8,9 +8,22 @@ passwd:
       ssh_authorized_keys_local:
         - ssh-public-keys/limiting-factor.pub
 
+# ---------------------------------------------------------
+# OS Layering (Docker Compose plugin)
+# ---------------------------------------------------------
+packages:
+  - docker-compose-plugin
+
+# ---------------------------------------------------------
+# Storage: SSH keys, infra config, env files, scripts
+# ---------------------------------------------------------
 storage:
+  directories:
+    - path: /opt
+      mode: 0755
+
   files:
-    # SSH private key (loaded from local file at build time)
+    # SSH private key for GitHub access
     - path: /var/lib/ssh/limiting-factor-github
       mode: 0600
       contents:
@@ -25,27 +38,34 @@ storage:
             IdentityFile /var/lib/ssh/limiting-factor-github
             StrictHostKeyChecking no
     
-    # Load in clone or update script
+    # Host-level infra configuration
     - path: /usr/local/bin/clone-or-update-infra.sh
       mode: 0755
       contents:
         local: scripts/clone-or-update-infra.sh
     
-    - path: /etc/infra-config
+    # Komodo environment file
+    - path: /opt/config/infra-config
       mode: 0644
       contents:
         local: env-files/infra-setup.env
 
 
-    # Staged Komodo env file (not renamed)
-    - path: /opt/docker-env-files/komodo.env
+    # External infra update script
+    - path: /opt/docker-env-files/komodo/.env
       mode: 0600
       contents:
         local: env-files/komodo.env
 
+# ---------------------------------------------------------
+# Systemd Units
+# ---------------------------------------------------------
 systemd:
   units:
-    # Clone your private repo on first boot
+
+    # -----------------------------------------------------
+    # Clone or update infra repo (clone on first boot, pull on reboot)
+    # -----------------------------------------------------
     - name: infra-setup.service
       enabled: true
       contents: |
@@ -56,7 +76,7 @@ systemd:
 
         [Service]
         Type=oneshot
-        EnvironmentFile=/etc/infra-config
+        EnvironmentFile=/opt/config/infra-config
         Environment="GIT_SSH_COMMAND=ssh -F /var/lib/ssh/config"
         ExecStart=/usr/local/bin/clone-or-update-infra.sh
         RemainAfterExit=yes
@@ -64,7 +84,9 @@ systemd:
         [Install]
         WantedBy=multi-user.target
     
-    # Copy komodo.env into the compose directory
+    # -----------------------------------------------------
+    # Install Komodo environment file into compose directory
+    # -----------------------------------------------------
     - name: komodo-env-install.service
       enabled: true
       contents: |
@@ -77,14 +99,16 @@ systemd:
         [Service]
         Type=oneshot
         ExecStart=/usr/bin/install -D -m 600 \
-          /opt/docker-env-files/komodo.env \
-          /opt/my-infra/docker-compose/core/komodo.env
+          /opt/docker-env-files/komodo/.env \
+          /opt/my-infra/docker-compose/core
         RemainAfterExit=yes
 
         [Install]
         WantedBy=multi-user.target
     
-    # Start Komodo after env + repo are ready
+    # -----------------------------------------------------
+    # Start Komodo (after repo + env file + Docker are ready)
+    # -----------------------------------------------------
     - name: komodo.service
       enabled: true
       contents: |
@@ -95,7 +119,7 @@ systemd:
 
         [Service]
         WorkingDirectory=/opt/my-infra/docker-compose/core
-        ExecStart=/usr/bin/docker compose --env-file komodo.env up -d
+        ExecStart=/usr/bin/docker compose up -d
         ExecStop=/usr/bin/docker compose down
         Restart=always
 
