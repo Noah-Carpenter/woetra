@@ -1,0 +1,4 @@
+**/ssh-private-keys/
+*.ign
+*.env
+!example.env
