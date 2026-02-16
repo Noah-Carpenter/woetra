@@ -47,33 +47,38 @@ systemd:
         [Install]
         WantedBy=multi-user.target
     
+    # Copy komodo.env into the compose directory
     - name: komodo-env-install.service
       enabled: true
       contents: |
         [Unit]
-        Description=Install Komodo .env file
+        Description=Install Komodo environment file
         After=infra-setup.service
         Requires=infra-setup.service
+        ConditionPathExists=/opt/my-infra/docker-compose/core
 
         [Service]
         Type=oneshot
-        ExecStart=/usr/bin/install -m 600 /opt/docker-env-files/komodo.env /opt/my-infra/docker-compose/core/.env
+        ExecStart=/usr/bin/install -D -m 600 \
+          /opt/docker-env-files/komodo.env \
+          /opt/my-infra/docker-compose/core/komodo.env
         RemainAfterExit=yes
 
         [Install]
         WantedBy=multi-user.target
     
+    # Start Komodo after env + repo are ready
     - name: komodo.service
       enabled: true
       contents: |
         [Unit]
-        Description=Komodo Core + Periphery
+        Description=Komodo Core + Gateway
         After=docker.service infra-setup.service komodo-env-install.service
         Requires=docker.service infra-setup.service komodo-env-install.service
 
         [Service]
         WorkingDirectory=/opt/my-infra/docker-compose/core
-        ExecStart=/usr/bin/docker compose up -d
+        ExecStart=/usr/bin/docker compose --env-file komodo.env up -d
         ExecStop=/usr/bin/docker compose down
         Restart=always
 
