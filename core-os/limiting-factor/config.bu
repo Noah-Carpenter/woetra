@@ -10,10 +10,13 @@ passwd:
 
 storage:
   files:
+    # SSH private key (loaded from local file at build time)
     - path: /var/lib/ssh/limiting-factor-github
       mode: 0600
       contents:
         local: ssh-private-keys/limiting-factor-github
+    
+    # SSH config for GitHub
     - path: /var/lib/ssh/config
       mode: 0644
       contents:
@@ -21,11 +24,24 @@ storage:
           Host github.com
             IdentityFile /var/lib/ssh/limiting-factor-github
             StrictHostKeyChecking no
+    
+    # Load in clone or update script
+    - path: /usr/local/bin/clone-or-update-infra.sh
+      mode: 0755
+      contents:
+        local: scripts/clone-or-update-infra.sh
+    
+    - path: /etc/infra-config
+      mode: 0644
+      contents:
+        local: env-files/infra-setup.env
+
+
+    # Staged Komodo env file (not renamed)
     - path: /opt/docker-env-files/komodo.env
       mode: 0600
       contents:
         local: env-files/komodo.env
-
 
 systemd:
   units:
@@ -34,14 +50,15 @@ systemd:
       enabled: true
       contents: |
         [Unit]
-        Description=Clone private infra repo
+        Description=Clone or update private infra repo
         After=network-online.target
         Wants=network-online.target
 
         [Service]
         Type=oneshot
+        EnvironmentFile=/etc/infra-config
         Environment="GIT_SSH_COMMAND=ssh -F /var/lib/ssh/config"
-        ExecStart=/usr/bin/git clone git@github.com:Noah-Carpenter/woetra.git /opt/my-infra
+        ExecStart=/usr/local/bin/clone-or-update-infra.sh
         RemainAfterExit=yes
 
         [Install]
