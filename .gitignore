@@ -2,3 +2,6 @@
 *.ign
 *.env
 !example.env
+**/supporting-files/env-files/**/*
+*.bu
+!*.tmpl.bu

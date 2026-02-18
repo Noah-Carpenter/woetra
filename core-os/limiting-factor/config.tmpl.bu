@@ -9,7 +9,26 @@ passwd:
         - ssh-public-keys/limiting-factor.pub
 
 storage:
+  directories:
+    # Local persistent storage for runtime
+    - path: /var/lib/postgres
+      mode: 0755
+    - path: /var/lib/ferretdb
+      mode: 0755
+    - path: /var/lib/komodo-backups
+      mode: 0755
+
+    # NAS mount point (generic, reusable)
+    - path: /mnt/nas
+      mode: 0755
+
   files:
+    # NAS credentials (SMB)
+    - path: /var/lib/nas-credentials
+      mode: 0600
+      contents:
+        local: env-files/nas-credentials
+
     # SSH private key (loaded from local file at build time)
     - path: /var/lib/ssh/limiting-factor-github
       mode: 0600
@@ -31,17 +50,29 @@ storage:
       contents:
         local: scripts/clone-or-update-infra.sh
     
+     # External infra update script
     - path: /etc/infra-config
       mode: 0644
       contents:
         local: env-files/infra-setup.env
-
 
     # Staged Komodo env file (not renamed)
     - path: /opt/docker-env-files/komodo.env
       mode: 0600
       contents:
         local: env-files/komodo.env
+    
+    # Backup script (from repo)
+    - path: /usr/local/bin/backup-volumes.sh
+      mode: 0755
+      contents:
+        local: supporting-files/scripts/backup-volumes.sh
+
+    # Restore script (from repo)
+    - path: /usr/local/bin/restore-volumes.sh
+      mode: 0755
+      contents:
+        local: supporting-files/scripts/restore-volumes.sh
 
 systemd:
   units:
@@ -95,7 +126,7 @@ systemd:
       contents: |
         [Unit]
         Description=Clone or update private infra repo
-        After=network-online.target
+        After=network-online.target reboot-after-compose.service 
         Wants=network-online.target
 
         [Service]
@@ -109,6 +140,72 @@ systemd:
         WantedBy=multi-user.target
     
     # -----------------------------------------------------
+    # Mount the NAS
+    # -----------------------------------------------------
+
+    - name: mnt-nas.mount
+      enabled: true
+      contents: |
+        [Unit]
+        Description=NAS SMB Mount
+        After=network-online.target
+        Wants=network-online.target
+
+        [Mount]
+        What=//${NAS_HOST}/${NAS_SHARE}
+        Where=/mnt/nas
+        Type=cifs
+        Options=credentials=/var/lib/nas-credentials,uid=0,gid=0,file_mode=0700,dir_mode=0700
+
+        [Install]
+        WantedBy=multi-user.target
+
+    # -----------------------------------------------------
+    # Restore volumes from NAS before Komodo starts
+    # -----------------------------------------------------
+    - name: restore-volumes.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Restore persistent volumes from NAS
+        After=network-online.target mnt-nas.mount infra-setup.service
+        Wants=network-online.target
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/local/bin/restore-volumes.sh
+        RemainAfterExit=yes
+
+        [Install]
+        WantedBy=multi-user.target
+
+    # -----------------------------------------------------
+    # Backup service + timer
+    # -----------------------------------------------------
+    - name: backup-volumes.service
+      contents: |
+        [Unit]
+        Description=Backup persistent volumes to NAS
+        After=network-online.target mnt-nas.mount
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/local/bin/backup-volumes.sh
+
+    - name: backup-volumes.timer
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Run volume backups every 6 hours
+
+        [Timer]
+        OnBootSec=10min
+        OnUnitActiveSec=6h
+
+        [Install]
+        WantedBy=timers.target
+
+    # -----------------------------------------------------
     # Install Komodo environment file into compose directory
     # -----------------------------------------------------
     - name: komodo-env-install.service
@@ -116,7 +213,7 @@ systemd:
       contents: |
         [Unit]
         Description=Install Komodo environment file
-        After=infra-setup.service
+        After=infra-setup.service reboot-after-compose.service 
         Requires=infra-setup.service
         ConditionPathExists=/opt/my-infra/docker-compose/core
 
@@ -138,18 +235,17 @@ systemd:
       contents: |
         [Unit]
         Description=Komodo Core + Gateway
-        After=docker.service infra-setup.service komodo-env-install.service
-        Requires=docker.service infra-setup.service komodo-env-install.service
+        After=docker.service docker.socket infra-setup.service komodo-env-install.service reboot-after-compose.service 
+        Requires=docker.service docker.socket infra-setup.service komodo-env-install.service
+        Wants=network-online.target
+        After=network-online.target
 
         [Service]
+        Type=oneshot
         WorkingDirectory=/opt/my-infra/docker-compose/core
-        ExecStart=/usr/bin/docker compose up -d
-        ExecStop=/usr/bin/docker compose down
-        Restart=always
+        ExecStart=/usr/bin/docker-compose up -d
+        ExecStop=/usr/bin/docker-compose down
+        RemainAfterExit=yes
 
         [Install]
         WantedBy=multi-user.target
-
-    
-    
- 
