@@ -3,8 +3,12 @@ variant: fcos
 version: 1.6.0
 
 passwd:
+  groups:
+    - name: docker
   users:
     - name: core
+      groups:
+        - docker
       ssh_authorized_keys_local:
         - ssh-public-keys/limiting-factor.pub
 
