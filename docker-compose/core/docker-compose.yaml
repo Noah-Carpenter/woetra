@@ -113,4 +113,4 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: $/var/lib/komodo-backups
+      device: /var/lib/komodo-backups

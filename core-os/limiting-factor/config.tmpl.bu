@@ -19,7 +19,7 @@ storage:
       mode: 0755
 
     # NAS mount point (generic, reusable)
-    - path: /mnt/nas
+    - path: /var/mnt/nas
       mode: 0755
 
   files:
@@ -66,13 +66,13 @@ storage:
     - path: /usr/local/bin/backup-volumes.sh
       mode: 0755
       contents:
-        local: supporting-files/scripts/backup-volumes.sh
+        local: scripts/backup-volumes.sh
 
     # Restore script (from repo)
     - path: /usr/local/bin/restore-volumes.sh
       mode: 0755
       contents:
-        local: supporting-files/scripts/restore-volumes.sh
+        local: scripts/restore-volumes.sh
 
 systemd:
   units:
@@ -153,7 +153,7 @@ systemd:
 
         [Mount]
         What=//${NAS_HOST}/${NAS_SHARE}
-        Where=/mnt/nas
+        Where=/var/mnt/nas
         Type=cifs
         Options=credentials=/var/lib/nas-credentials,uid=0,gid=0,file_mode=0700,dir_mode=0700
 
