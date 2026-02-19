@@ -79,6 +79,8 @@ services:
       komodo.skip: # Prevent Komodo from stopping with StopAllContainers
     restart: unless-stopped
     env_file: ./.env
+    group_add:
+      - docker
     networks:
       - proxy-network
     volumes:
