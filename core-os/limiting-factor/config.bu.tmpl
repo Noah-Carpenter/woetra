@@ -248,7 +248,7 @@ systemd:
         Description=Komodo Core + Gateway
         Requires=docker.service docker.socket infra-setup.service komodo-env-install.service
         Wants=network-online.target
-        After=network-online.target docker.service docker.socket infra-setup.service komodo-env-install.service reboot-after-compose.service 
+        After=network-online.target docker.service docker.socket infra-setup.service komodo-env-install.service reboot-after-compose.service restore-volumes.service
 
 
         [Service]
