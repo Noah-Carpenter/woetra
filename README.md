@@ -11,7 +11,8 @@
 - `sudo coreos-installer install /dev/sda --ignition-url http://192.168.1.49:8000/config.ign --insecure-ignition` - Will install coreos with the iginition file hosted on the python server onto a given host machine.
 
 
-
-- `envsubst < supporting-files/extensions/media-retrieval.bu.tmpl > supporting-files/extensions/media-retrieval.bu` - build media-retrieval.bu.tmpl into a .bu file
-- `butane --pretty --strict -d .\supporting-files .\supporting-files\extensions\media-retrieval.bu --output .\supporting-files\extensions\media-retrieval.ign` - build media-retrieval.bu into ignition file.
-
+- Backups
+    - `sudo systemctl start backup-media-retrieval.service` - media-retrieval
+    - `sudo journalctl -u backup-media-retrieval.service` - media retrieval check it worked!
+    - `sudo systemctl start backup-volumes.service` - komodo
+    - `sudo journalctl -u backup-volumes.service` - komodo CHECK IT FUCKING WORKED!
