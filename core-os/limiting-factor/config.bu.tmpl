@@ -2,6 +2,12 @@
 variant: fcos
 version: 1.6.0
 
+ignition:
+  config:
+    merge:
+      - local: extensions/media-retrieval.ign
+
+
 passwd:
   users:
     - name: core

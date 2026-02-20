@@ -4,4 +4,4 @@
 !example.env
 **/supporting-files/env-files/**/*
 *.bu
-!*.tmpl.bu
+*.rendered.bu.tmpl

@@ -1,0 +1,87 @@
+variant: fcos
+version: 1.6.0
+
+storage:
+  directories:
+    # Local config volumes
+    - path: /var/lib/media-retrieval/qbit
+      mode: 0755
+    - path: /var/lib/media-retrieval/prowlarr
+      mode: 0755
+    - path: /var/lib/media-retrieval/flaresolverr
+      mode: 0755
+    - path: /var/lib/media-retrieval/sonarr
+      mode: 0755
+    - path: /var/lib/media-retrieval/radarr
+      mode: 0755
+    - path: /var/lib/media-retrieval/jellyseer
+      mode: 0755
+
+    # NAS backup directories
+    - path: /var/mnt/nas/docker-volumes/qbit
+      mode: 0755
+    - path: /var/mnt/nas/docker-volumes/prowlarr
+      mode: 0755
+    - path: /var/mnt/nas/docker-volumes/flaresolverr
+      mode: 0755
+    - path: /var/mnt/nas/docker-volumes/sonarr
+      mode: 0755
+    - path: /var/mnt/nas/docker-volumes/radarr
+      mode: 0755
+    - path: /var/mnt/nas/docker-volumes/jellyseer
+      mode: 0755
+
+  files:
+    # Backup script
+    - path: /usr/local/bin/backup-media-retrieval.sh
+      mode: 0755
+      contents:
+        local: scripts/backup-media-retrieval.sh
+
+    # Restore script
+    - path: /usr/local/bin/restore-media-retrieval.sh
+      mode: 0755
+      contents:
+        local: scripts/restore-media-retrieval.sh
+
+systemd:
+  units:
+    - name: backup-media-retrieval.service
+      contents: |
+        [Unit]
+        Description=Backup media-retrieval config volumes to NAS
+        After=var-mnt-nas.mount
+        Wants=var-mnt-nas.mount
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/local/bin/backup-media-retrieval.sh
+
+    - name: backup-media-retrieval.timer
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Run media-retrieval config backups every 6 hours
+
+        [Timer]
+        OnBootSec=10min
+        OnUnitActiveSec=6h
+
+        [Install]
+        WantedBy=timers.target
+
+    - name: restore-media-retrieval.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Restore media-retrieval config volumes from NAS
+        After=var-mnt-nas.mount
+        Wants=var-mnt-nas.mount
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/local/bin/restore-media-retrieval.sh
+        RemainAfterExit=yes
+
+        [Install]
+        WantedBy=multi-user.target
