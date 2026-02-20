@@ -48,7 +48,7 @@ volumes:
     driver_opts:
       type: cifs
       o: username=${SMB_USER_USERNAME},password=${SMB_USER_PASSWORD},file_mode=0777,dir_mode=0777,noperm
-      device: ${SMB_BASE_PATH}
+      device: ${SMB_DOWNLOADS_PATH}
 
 services:
   gluetun:
