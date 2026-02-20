@@ -15,8 +15,6 @@ sonarr:
     base_url: !env_var SONARR_URL
     api_key: !env_var SONARR_API_KEY
 
-    replace_existing_custom_formats: true
-
     include:
       # Common
       - template: sonarr-quality-definition-series
@@ -136,8 +134,6 @@ radarr:
   radarr:
     base_url: !env_var RADARR_URL
     api_key: !env_var RADARR_API_KEY
-
-    replace_existing_custom_formats: true
 
     include:
       # Comment out any of the following includes to disable them
