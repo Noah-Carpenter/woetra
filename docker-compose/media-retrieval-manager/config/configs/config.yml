@@ -135,8 +135,11 @@ radarr:
     base_url: !env_var RADARR_URL
     api_key: !env_var RADARR_API_KEY
 
-    
     include:
+      # Comment out any of the following includes to disable them
+      # Common
+      - template: radarr-quality-definition-movie
+
       # HD Bluray + WEB 
       - template: radarr-quality-profile-hd-bluray-web
       - template: radarr-custom-formats-hd-bluray-web
@@ -148,9 +151,6 @@ radarr:
       # Anime Radarr
       - template: radarr-quality-profile-anime
       - template: radarr-custom-formats-anime
-
-    quality_definition:
-      type: movie
 
     # Media Naming Configuration
     media_naming:
