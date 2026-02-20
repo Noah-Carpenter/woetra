@@ -71,7 +71,7 @@ services:
     #   - host.docker.internal:host-gateway
 
   ## Deploy Periphery container using this block,
-  ## or deploy the Periphery binary with systemd using 
+  ## or deploy the Periphery binary with systemd using
   ## https://github.com/moghtech/komodo/tree/main/scripts
   periphery:
     image: ghcr.io/moghtech/komodo-periphery:${COMPOSE_KOMODO_IMAGE_TAG:-latest}
@@ -79,8 +79,9 @@ services:
       komodo.skip: # Prevent Komodo from stopping with StopAllContainers
     restart: unless-stopped
     env_file: ./.env
-    group_add:
-      - docker
+    security_opt:
+        - label=disable
+    user: root
     networks:
       - proxy-network
     volumes:
