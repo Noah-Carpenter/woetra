@@ -50,6 +50,7 @@ systemd:
       contents: |
         [Unit]
         Description=Backup media-retrieval config volumes to NAS
+        Before=komodo.service
         After=var-mnt-nas.mount
         Wants=var-mnt-nas.mount
 
@@ -74,14 +75,14 @@ systemd:
       enabled: true
       contents: |
         [Unit]
-        Description=Restore media-retrieval config volumes from NAS
-        After=var-mnt-nas.mount
-        Wants=var-mnt-nas.mount
+        Description=Restore media retrieval volumes from NAS (first boot only)
+        After=network-online.target
+        ConditionPathExists=!/var/lib/.media-restore-done
 
         [Service]
         Type=oneshot
         ExecStart=/usr/local/bin/restore-media-retrieval.sh
-        RemainAfterExit=yes
+        ExecStartPost=/usr/bin/touch /var/lib/.media-restore-done
 
         [Install]
         WantedBy=multi-user.target

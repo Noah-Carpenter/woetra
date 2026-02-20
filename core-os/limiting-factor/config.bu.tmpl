@@ -179,10 +179,12 @@ systemd:
         Description=Restore persistent volumes from NAS
         After=network-online.target var-mnt-nas.mount infra-setup.service
         Wants=network-online.target
+        ConditionPathExists=!/var/lib/.volumes-restore-done
 
         [Service]
         Type=oneshot
         ExecStart=/usr/local/bin/restore-volumes.sh
+        ExecStartPost=/usr/bin/touch /var/lib/.volumes-restore-done
         RemainAfterExit=yes
 
         [Install]
