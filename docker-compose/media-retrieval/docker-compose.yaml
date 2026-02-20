@@ -4,22 +4,51 @@ networks:
 
 volumes:
   qbit_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/media-retrieval/qbit/
   prowlarr_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/media-retrieval/prowlarr/ 
   flaresolver_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/media-retrieval/flaresolverr/
   sonarr_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/media-retrieval/sonarr/
   radarr_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/media-retrieval/radarr/
   jellyseer_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/media-retrieval/jellyseer/
   media:
     driver_opts:
       type: cifs
       o: username=${SMB_USER_USERNAME},password=${SMB_USER_PASSWORD},file_mode=0777,dir_mode=0777,noperm
       device: ${SMB_BASE_PATH}
   downloads:
-    driver: local
     driver_opts:
-      type: none
-      o: bind
-      device: ${DOWNLOADS_VOLUME_LOCATION}
+      type: cifs
+      o: username=${SMB_USER_USERNAME},password=${SMB_USER_PASSWORD},file_mode=0777,dir_mode=0777,noperm
+      device: ${SMB_BASE_PATH}
 
 services:
   gluetun:
