@@ -1,0 +1,25 @@
+networks:
+  proxy-network:
+    external: true
+
+services:
+  traefik:
+    image: traefik:v3.6
+    restart: unless-stopped
+    security_opt:
+        - label=disable
+    user: root
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - proxy-network
+    labels:
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${TRAEFIK_BASE_DOMAIN}`)"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
