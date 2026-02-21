@@ -1,0 +1,62 @@
+variant: fcos
+version: 1.6.0
+
+# ---------------------------------------------------------
+# Persistent directories for Jellyfin
+# ---------------------------------------------------------
+
+storage:
+  directories:
+    - path: /var/lib/media-streaming/jellyfin
+      mode: 0755
+    - path: /var/lib/media-streaming/jellyfin-cache
+      mode: 0755
+
+# ---------------------------------------------------------
+# Backup + restore integration for Jellyfin
+# ---------------------------------------------------------
+
+systemd:
+  units:
+    # Backup Jellyfin config (NOT cache)
+    - name: backup-jellyfin.service
+      contents: |
+        [Unit]
+        Description=Backup Jellyfin config to NAS
+        After=var-mnt-nas.mount
+        Wants=var-mnt-nas.mount
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/bin/rsync -a --delete /var/lib/media-streaming/jellyfin/ /var/mnt/nas/backups/jellyfin/
+
+    - name: backup-jellyfin.timer
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Run Jellyfin config backups every 6 hours
+
+        [Timer]
+        OnBootSec=10min
+        OnUnitActiveSec=6h
+
+        [Install]
+        WantedBy=timers.target
+
+    # Restore Jellyfin config before Komodo starts containers
+    - name: restore-jellyfin.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Restore Jellyfin config from NAS
+        Before=komodo.service
+        After=var-mnt-nas.mount
+        Wants=var-mnt-nas.mount
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/bin/rsync -a /var/mnt/nas/backups/jellyfin/ /var/lib/media-streaming/jellyfin/
+        RemainAfterExit=yes
+
+        [Install]
+        WantedBy=multi-user.target
