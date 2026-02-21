@@ -52,7 +52,7 @@ systemd:
         [Unit]
         Description=Backup media-retrieval config volumes to NAS
         Before=komodo.service
-        After=var-mnt-nas.mount
+        After=var-mnt-nas.mount restore-media-retrieval.service
         Wants=var-mnt-nas.mount
         ConditionPathExists=/var/lib/.media-restore-done
 

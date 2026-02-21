@@ -40,7 +40,7 @@ systemd:
       contents: |
         [Unit]
         Description=Backup media-streaming config to NAS
-        After=var-mnt-nas.mount
+        After=var-mnt-nas.mount restore-media-streaming.service
         Wants=var-mnt-nas.mount
         ConditionPathExists=/var/lib/.media-streaming-restore-done
 

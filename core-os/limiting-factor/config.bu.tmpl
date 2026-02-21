@@ -205,7 +205,7 @@ systemd:
       contents: |
         [Unit]
         Description=Backup persistent volumes to NAS
-        After=network-online.target var-mnt-nas.mount
+        After=network-online.target var-mnt-nas.mount restore-volumes.service
         ConditionPathExists=/var/lib/.volumes-restore-done
 
         [Service]
