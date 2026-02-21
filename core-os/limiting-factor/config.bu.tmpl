@@ -17,6 +17,13 @@ passwd:
         - ssh-public-keys/limiting-factor.pub
 
 storage:
+  links:
+    - path: /etc/localtime
+      target: ../usr/share/zoneinfo/Australia/Sydney
+      hard: false
+      overwrite: true
+
+
   directories:
     # Local persistent storage for runtime
     - path: /var/lib/postgres

@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "*.bu": "yaml",
+        "*.bu.tmpl": "yaml",
+        "*.ign": "json"
+    },
+    "yaml.schemas": {
+        "https://relativ-it.github.io/Butane-Schemas/Butane-Schema.json": [
+            "*.bu",
+            "*.bu.tmpl"
+        ]
+    },
+    "yaml.customTags": [
+        "!secret scalar",
+        "!env_var scalar"
+    ]
+}
