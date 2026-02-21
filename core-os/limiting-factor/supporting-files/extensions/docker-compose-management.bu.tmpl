@@ -1,0 +1,79 @@
+variant: fcos
+version: 1.6.0
+
+# ---------------------------------------------------------
+# Persistent directories for media streaming
+# ---------------------------------------------------------
+
+storage:
+  directories:
+    # Local config volumes
+    - path: /var/lib/media-streaming/traefik
+      mode: 0755
+
+    # NAS backup directories
+    - path: /var/mnt/nas/docker-volumes/traefik
+      mode: 0755
+  files:
+    # Backup script
+    - path: /usr/local/bin/backup-docker-management.sh
+      mode: 0755
+      contents:
+        local: scripts/backup-docker-management.sh
+
+    # Restore script
+    - path: /usr/local/bin/restore-docker-management.sh
+      mode: 0755
+      contents:
+        local: scripts/restore-docker-management.sh
+
+# ---------------------------------------------------------
+# Backup + restore integration for docker management stack
+# ---------------------------------------------------------
+
+systemd:
+  units:
+    # Backup for docker management stack volumes
+    - name: backup-docker-management.service
+      contents: |
+        [Unit]
+        Description=Backup docker-management config to NAS
+        After=var-mnt-nas.mount restore-docker-management.service
+        Wants=var-mnt-nas.mount
+        ConditionPathExists=/var/lib/.docker-management-restore-done
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/local/bin/backup-docker-management.sh
+
+    - name: backup-docker-management.timer
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Run docker-management config backups every 6 hours
+
+        [Timer]
+        OnBootSec=10min
+        OnUnitActiveSec=6h
+
+        [Install]
+        WantedBy=timers.target
+
+    # Restore for docker management stack volumes before Komodo starts containers
+    - name: restore-docker-management.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Restore docker-management config from NAS
+        After=var-mnt-nas.mount
+        Wants=var-mnt-nas.mount
+        ConditionPathExists=!/var/lib/.docker-management-restore-done
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/local/bin/restore-docker-management.sh
+        ExecStartPost=/usr/bin/touch /var/lib/.docker-management-restore-done
+        RemainAfterExit=yes
+
+        [Install]
+        WantedBy=multi-user.target

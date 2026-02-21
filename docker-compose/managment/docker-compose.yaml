@@ -2,6 +2,14 @@ networks:
   proxy-network:
     external: true
 
+volumes:
+  qbit_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/docker-management/traefik/
+
 services:
   traefik:
     image: traefik:v3.6
@@ -9,15 +17,29 @@ services:
     security_opt:
         - label=disable
     user: root
+    environment:
+      - CF_DNS_API_TOKEN=${CLOUDFLARE_API_TOKEN}
     command:
       - "--api.insecure=true"
       - "--providers.docker=true"
+      
       - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+
+      - "--certificatesresolvers.cloudflare.acme.dnschallenge=true"
+      - "--certificatesresolvers.cloudflare.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.cloudflare.acme.email=${LETSENCRYPT_EMAIL}"
+      - "--certificatesresolvers.cloudflare.acme.storage=/letsencrypt/acme.json"
+
     ports:
       - "80:80"
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - traefik:/letsencrypt
+
     networks:
       - proxy-network
     labels:
