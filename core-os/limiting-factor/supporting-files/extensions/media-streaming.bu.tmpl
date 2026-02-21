@@ -42,7 +42,7 @@ systemd:
         Description=Backup media-streaming config to NAS
         After=var-mnt-nas.mount
         Wants=var-mnt-nas.mount
-        ConditionPathExists=!/var/lib/.media-streaming-restore-done
+        ConditionPathExists=/var/lib/.media-streaming-restore-done
 
         [Service]
         Type=oneshot

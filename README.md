@@ -18,5 +18,7 @@
     - Backups
         - `sudo systemctl start backup-media-retrieval.service` - media-retrieval
         - `sudo journalctl -u backup-media-retrieval.service` - media retrieval check it worked!
+        - `sudo systemctl start backup-media-streaming.service` - media-retrieval
+        - `sudo journalctl -u backup-media-streaming.service` - media retrieval check it worked!
         - `sudo systemctl start backup-volumes.service` - komodo
         - `sudo journalctl -u backup-volumes.service` - komodo CHECK IT FUCKING WORKED!

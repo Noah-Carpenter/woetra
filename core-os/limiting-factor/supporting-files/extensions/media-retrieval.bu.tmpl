@@ -54,7 +54,7 @@ systemd:
         Before=komodo.service
         After=var-mnt-nas.mount
         Wants=var-mnt-nas.mount
-        ConditionPathExists=!/var/lib/.media-restore-done
+        ConditionPathExists=/var/lib/.media-restore-done
 
         [Service]
         Type=oneshot
