@@ -2,7 +2,7 @@ variant: fcos
 version: 1.6.0
 
 # ---------------------------------------------------------
-# Persistent directories for Jellyfin
+# Persistent directories for media streaming
 # ---------------------------------------------------------
 
 storage:
@@ -30,12 +30,12 @@ storage:
         local: scripts/restore-media-streaming.sh
 
 # ---------------------------------------------------------
-# Backup + restore integration for Jellyfin
+# Backup + restore integration for media streaming
 # ---------------------------------------------------------
 
 systemd:
   units:
-    # Backup Jellyfin config (NOT cache)
+    # Backup media streaming config (NOT cache)
     - name: backup-media-streaming.service
       contents: |
         [Unit]
@@ -61,12 +61,12 @@ systemd:
         [Install]
         WantedBy=timers.target
 
-    # Restore Jellyfin config before Komodo starts containers
+    # Restore media streaming config before Komodo starts containers
     - name: restore-media-streaming.service
       enabled: true
       contents: |
         [Unit]
-        Description=Restore Jellyfin config from NAS
+        Description=Restore media-streaming config from NAS
         After=var-mnt-nas.mount
         Wants=var-mnt-nas.mount
         ConditionPathExists=!/var/lib/.media-streaming-restore-done
@@ -74,7 +74,7 @@ systemd:
         [Service]
         Type=oneshot
         ExecStart=/usr/local/bin/restore-media-streaming.sh
-        ExecStartPost=/usr/bin/touch /var/lib/.jellyfin-restore-done
+        ExecStartPost=/usr/bin/touch /var/lib/.media-streaming-restore-done
         RemainAfterExit=yes
 
         [Install]

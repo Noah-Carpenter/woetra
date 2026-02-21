@@ -22,3 +22,5 @@
         - `sudo journalctl -u backup-media-streaming.service` - media retrieval check it worked!
         - `sudo systemctl start backup-volumes.service` - komodo
         - `sudo journalctl -u backup-volumes.service` - komodo CHECK IT FUCKING WORKED!
+
+- `sudo journalctl -u komodo.service -f` show tail of komodo logs while installing
