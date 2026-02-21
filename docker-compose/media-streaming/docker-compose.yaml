@@ -30,6 +30,10 @@ services:
     labels:
       - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.${TRAEFIK_BASE_DOMAIN}`)"
       - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
+      - "traefik.http.routers.jellyfin.entrypoints=websecure"
+      - "traefik.http.routers.jellyfin.tls.certresolver=cloudflare"
+      - "traefik.docker.network=proxy-network"
+
     ports:
       - 8096:8096/tcp
       - 7359:7359/udp

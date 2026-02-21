@@ -44,7 +44,10 @@ services:
     image: ghcr.io/moghtech/komodo-core:${COMPOSE_KOMODO_IMAGE_TAG:-latest}
     labels:
       - "komodo.skip" # Prevent Komodo from stopping with StopAllContainers
+      - "traefik.docker.network=proxy-network"
       - "traefik.http.routers.core.rule=Host(`komodo.${TRAEFIK_BASE_DOMAIN}`)"
+      - "traefik.http.routers.core.entrypoints=websecure"
+      - "traefik.http.routers.core.tls.certresolver=cloudflare"
       
     restart: unless-stopped
     depends_on:
