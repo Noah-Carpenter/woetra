@@ -6,6 +6,7 @@ ignition:
   config:
     merge:
       - local: extensions/media-retrieval.ign
+      - local: extensions/media-streaming.ign
 
 
 passwd:
@@ -205,6 +206,7 @@ systemd:
         [Unit]
         Description=Backup persistent volumes to NAS
         After=network-online.target var-mnt-nas.mount
+        ConditionPathExists=!/var/lib/.volumes-restore-done
 
         [Service]
         Type=oneshot

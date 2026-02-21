@@ -7,10 +7,27 @@ version: 1.6.0
 
 storage:
   directories:
+    # Local config volumes
     - path: /var/lib/media-streaming/jellyfin
       mode: 0755
     - path: /var/lib/media-streaming/jellyfin-cache
       mode: 0755
+
+    # NAS backup directories
+    - path: /var/mnt/nas/docker-volumes/jellyfin
+      mode: 0755
+  files:
+    # Backup script
+    - path: /usr/local/bin/backup-media-streaming.sh
+      mode: 0755
+      contents:
+        local: scripts/backup-media-streaming.sh
+
+    # Restore script
+    - path: /usr/local/bin/restore-media-streaming.sh
+      mode: 0755
+      contents:
+        local: scripts/restore-media-streaming.sh
 
 # ---------------------------------------------------------
 # Backup + restore integration for Jellyfin
@@ -19,22 +36,23 @@ storage:
 systemd:
   units:
     # Backup Jellyfin config (NOT cache)
-    - name: backup-jellyfin.service
+    - name: backup-media-streaming.service
       contents: |
         [Unit]
-        Description=Backup Jellyfin config to NAS
+        Description=Backup media-streaming config to NAS
         After=var-mnt-nas.mount
         Wants=var-mnt-nas.mount
+        ConditionPathExists=!/var/lib/.media-streaming-restore-done
 
         [Service]
         Type=oneshot
-        ExecStart=/usr/bin/rsync -a --delete /var/lib/media-streaming/jellyfin/ /var/mnt/nas/backups/jellyfin/
+        ExecStart=/usr/local/bin/backup-media-streaming.sh
 
-    - name: backup-jellyfin.timer
+    - name: backup-media-streaming.timer
       enabled: true
       contents: |
         [Unit]
-        Description=Run Jellyfin config backups every 6 hours
+        Description=Run media-streaming config backups every 6 hours
 
         [Timer]
         OnBootSec=10min
@@ -44,18 +62,19 @@ systemd:
         WantedBy=timers.target
 
     # Restore Jellyfin config before Komodo starts containers
-    - name: restore-jellyfin.service
+    - name: restore-media-streaming.service
       enabled: true
       contents: |
         [Unit]
         Description=Restore Jellyfin config from NAS
-        Before=komodo.service
         After=var-mnt-nas.mount
         Wants=var-mnt-nas.mount
+        ConditionPathExists=!/var/lib/.media-streaming-restore-done
 
         [Service]
         Type=oneshot
-        ExecStart=/usr/bin/rsync -a /var/mnt/nas/backups/jellyfin/ /var/lib/media-streaming/jellyfin/
+        ExecStart=/usr/local/bin/restore-media-streaming.sh
+        ExecStartPost=/usr/bin/touch /var/lib/.jellyfin-restore-done
         RemainAfterExit=yes
 
         [Install]

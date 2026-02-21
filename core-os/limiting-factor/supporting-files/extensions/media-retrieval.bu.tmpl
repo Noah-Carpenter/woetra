@@ -51,8 +51,10 @@ systemd:
       contents: |
         [Unit]
         Description=Backup media-retrieval config volumes to NAS
+        Before=komodo.service
         After=var-mnt-nas.mount
         Wants=var-mnt-nas.mount
+        ConditionPathExists=!/var/lib/.media-restore-done
 
         [Service]
         Type=oneshot
@@ -75,18 +77,16 @@ systemd:
       enabled: true
       contents: |
         [Unit]
-        Description=Restore Jellyfin config from NAS
+        Description=Restore media retrieval volumes from NAS (first boot only)
         Before=komodo.service
-        After=var-mnt-nas.mount
+        After=var-mnt-nas.mount network-online.target
         Wants=var-mnt-nas.mount
-        ConditionPathExists=!/var/lib/.jellyfin-restore-done
-        
+        ConditionPathExists=!/var/lib/.media-restore-done
+
         [Service]
         Type=oneshot
-        ExecStart=/usr/bin/rsync -a /var/mnt/nas/backups/jellyfin/ /var/lib/media-streaming/jellyfin/
-        ExecStartPost=/usr/bin/touch /var/lib/.jellyfin-restore-done
-        RemainAfterExit=yes
-        
+        ExecStart=/usr/local/bin/restore-media-retrieval.sh
+        ExecStartPost=/usr/bin/touch /var/lib/.media-restore-done
+
         [Install]
         WantedBy=multi-user.target
-
